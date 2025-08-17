@@ -324,12 +324,102 @@
             margin-bottom: 15px;
             display: none;
         }
+
+        /* Стили для модального окна */
+        .help-btn {
+            position: absolute;
+            top: 20px;
+            right: 80px; /* Сдвигаем левее кнопки темы */
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .help-btn:hover {
+            transform: scale(1.1);
+            background: var(--bg-tertiary);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .instruction-list {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .instruction-list li {
+            margin-bottom: 20px;
+        }
+        .instruction-list p {
+            margin-top: 8px;
+            margin-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .instruction-list img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-left: 20px;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
     <button class="theme-toggle" onclick="toggleTheme()">
         <span id="theme-icon">🌙</span>
     </button>
+    <button class="help-btn" id="help-btn">?</button>
 
     <div class="container">
         <div class="header">
@@ -607,6 +697,72 @@
                 document.getElementById('file-input').dispatchEvent(event);
             }
         }
+
+        // --- Логика модального окна ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const helpBtn = document.getElementById('help-btn');
+            const modal = document.getElementById('help-modal');
+            const closeModalBtn = document.querySelector('.modal-close');
+
+            function openModal() {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    modal.querySelector('.modal-content').style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function closeModal() {
+                modal.style.opacity = '0';
+                modal.querySelector('.modal-content').style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+
+            if (helpBtn && modal && closeModalBtn) {
+                helpBtn.addEventListener('click', openModal);
+                closeModalBtn.addEventListener('click', closeModal);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }
+        });
+
     </script>
+
+    <div id="help-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Как это работает?</h2>
+            <ol class="instruction-list">
+                <li>
+                    <strong>Шаг 1: Откройте код страницы</strong>
+                    <p>Перейдите на страницу встречи в tl;dv, расшифровку которой нужно получить. Нажмите правой кнопкой мыши на тексте и выберите "Просмотреть код" (Inspect).</p>
+                    <img src="/static/images/step1.png" alt="Инструкция, шаг 1">
+                </li>
+                <li>
+                    <strong>Шаг 2: Найдите нужный элемент</strong>
+                    <p>В открывшейся панели инструментов разработчика найдите и выделите HTML-элемент с тегом &lt;div id="transcript-container"&gt;. Это контейнер всей расшифровки.</p>
+                    <img src="/static/images/step2.png" alt="Инструкция, шаг 2">
+                    <p>Или просто зайдите в код страницы и с помощью поиска ctrl+F найдете тот же контейнер transcript-container</p>
+                    <img src="/static/images/step3.png" alt="Инструкция, шаг 2-альтернатива">
+                </li>
+                <li>
+                    <strong>Шаг 3: Скопируйте и сохраните код</strong>
+                    <p>Нажмите на найденный элемент правой кнопкой мыши и выберите Копировать -> Копировать элемент (Copy -> Copy element). Вставьте скопированный HTML-код в простой текстовый редактор (Блокнот, TextEdit) и сохраните файл с любым именем, например, расшифровка.txt.</p>
+                </li>
+                <li>
+                    <strong>Шаг 4: Загрузите файл и получите результат</strong>
+                    <p><strong>Вариант 1:</strong> Вернитесь в это приложение и загрузите созданный вами файл.</p>
+                    <p><strong>Вариант 2:</strong> Просто вставьте скопированный элемент кода в поле вставки в приложении.</p>
+                    <p>Нажмите кнопку "Обработать". Скопируйте полученный чистый текст и используйте его по своему усмотрению (например, для создания краткого содержания в нейросети).</p>
+                </li>
+            </ol>
+        </div>
+    </div>
+
 </body>
 </html>
