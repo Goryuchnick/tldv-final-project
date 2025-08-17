@@ -224,6 +224,11 @@
             margin-bottom: 15px;
         }
 
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
         .result-header h2 {
             font-size: 18px;
             font-weight: 500;
@@ -372,12 +377,20 @@
         <div class="result-section">
             <div class="result-header">
                 <h2>Результат</h2>
-                <button class="copy-btn" id="copy-btn" onclick="copyResult()" style="display: none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                    <span id="copy-btn-text">Копировать</span>
-                </button>
+                <div class="result-actions">
+                    <button class="copy-btn" id="copy-btn" onclick="copyResult()" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                        <span id="copy-btn-text">Копировать</span>
+                    </button>
+                    <button class="copy-btn" id="download-btn" onclick="downloadResult()" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                        <span>Скачать .txt</span>
+                    </button>
+                </div>
             </div>
             <div class="loading" id="loading">
                 <div class="spinner"></div>
@@ -471,7 +484,9 @@
                     showError('Пожалуйста, вставьте HTML-код');
                     return;
                 }
-                formData.append('html_text', htmlText);
+                // Создаем Blob из текста, чтобы отправить его как файл и обойти ошибку 413
+                const textBlob = new Blob([htmlText], { type: 'text/html' });
+                formData.append('file', textBlob, 'pasted_text.html');
             } else {
                 const fileInput = document.getElementById('file-input');
                 if (!fileInput.files[0]) {
@@ -501,6 +516,7 @@
                 } else {
                     document.getElementById('result-content').textContent = data.result;
                     document.getElementById('copy-btn').style.display = 'flex';
+                    document.getElementById('download-btn').style.display = 'flex';
                 }
             })
             .catch(error => {
@@ -512,6 +528,24 @@
             .finally(() => {
                 document.getElementById('process-btn').disabled = false;
             });
+        }
+
+        function downloadResult() {
+            const resultText = document.getElementById('result-content').textContent;
+            if (!resultText || resultText === 'Результат обработки появится здесь' || resultText === 'Ошибка обработки') {
+                showError('Нет результата для скачивания');
+                return;
+            }
+
+            const blob = new Blob([resultText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transcript.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function copyResult() {

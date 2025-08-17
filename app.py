@@ -74,20 +74,21 @@ def format_milliseconds_to_hms(ms):
 
 
 def parse_transcript(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
+    # The problem states that pasted text can cause errors.
+    # This often happens because the text contains HTML entities like &lt; instead of <.
+    # The html.unescape function is designed to fix this.
+    # By running it unconditionally, we create a single, reliable processing path
+    # for both file content (usually raw HTML) and pasted text (often escaped).
+    # This function is safe to run on non-escaped HTML, as it will leave it unchanged.
+    processed_content = html.unescape(html_content)
 
-    # Первая попытка: прямой парсинг
+    # There's a chance the content is double-escaped (e.g., &amp;lt;).
+    # Running unescape a second time can fix this. It's a low-cost operation.
+    processed_content = html.unescape(processed_content)
+
+    soup = BeautifulSoup(processed_content, 'html.parser')
+
     blocks = soup.find_all('p', class_='group/block')
-
-    if not blocks:
-        # Если блоки не найдены, пробуем деэкранировать HTML и парсить снова
-        try:
-            unescaped_content = html.unescape(html_content)
-            soup_unescaped = BeautifulSoup(unescaped_content, 'html.parser')
-            blocks = soup_unescaped.find_all('p', class_='group/block')
-        except Exception:
-            # Если деэкранирование или повторный парсинг терпят неудачу
-            blocks = []
 
     if not blocks:
         return "Не найдено блоков с расшифровкой (возможно, изменилась структура или код HTML экранирован)."
@@ -103,9 +104,8 @@ def parse_transcript(html_content):
                 speaker = speaker_name_span.get_text(strip=True)
 
         # --- Извлечение и форматирование таймкода ---
-        # Ищем атрибут 'data-time'
         timestamp_ms = block.get('data-time')
-        timestamp_formatted = format_milliseconds_to_hms(timestamp_ms)  # Используем новую вспомогательную функцию
+        timestamp_formatted = format_milliseconds_to_hms(timestamp_ms)
 
         # --- Извлечение текста расшифровки с сохранением пробелов ---
         text_spans = block.find_all('span', {'data-clipped': 'false'})
@@ -130,12 +130,10 @@ def index():
 @app.route('/process', methods=['POST'])
 def process():
     try:
-        # Проверяем, что пришло - файл или текст
+        # Теперь все входные данные обрабатываются как файлы, чтобы обойти ошибку 413
         if 'file' in request.files and request.files['file'].filename:
             file = request.files['file']
             content = extract_text_from_file(file)
-        elif 'html_text' in request.form and request.form['html_text'].strip():
-            content = request.form['html_text']
         else:
             return jsonify({'error': 'Нет данных для обработки'}), 400
 
