@@ -503,10 +503,10 @@
     </div>
 
     <script>
-        // Инициализация темы: темная по умолчанию, если не сохранено другое
+        // Инициализация темы: светлая по умолчанию, если не сохранено другое
         const savedTheme = localStorage.getItem('theme');
-        // Если тема не сохранена (savedTheme === null), устанавливаем 'dark', иначе используем сохраненную
-        const initialTheme = savedTheme === null ? 'dark' : savedTheme;
+        // Если тема не сохранена (savedTheme === null), устанавливаем 'light', иначе используем сохраненную
+        const initialTheme = savedTheme === null ? 'light' : savedTheme;
         document.documentElement.setAttribute('data-theme', initialTheme);
         updateThemeIcon();
 
