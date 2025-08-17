@@ -38,7 +38,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='TranscriptParser',
+    name='TL;DV Parser',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
